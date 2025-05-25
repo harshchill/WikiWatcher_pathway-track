@@ -38,8 +38,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Define the API URL
-API_URL = "http://localhost:8000"
+# Define the API URL - Configure for your environment
+API_URL = "http://localhost:8000"  # Default API URL for local development
 
 # Check if the API is available
 def is_api_available():
@@ -130,7 +130,12 @@ if not api_available:
     The WikiWatch backend service is not running. Features like starting the pipeline, querying, 
     and viewing recent changes will not work until the backend is started.
     
-    To start the backend, run: `cd wiki_watch && uvicorn app:app --reload --host 0.0.0.0 --port 8000`
+    **To start the backend:**
+    1. Open a new terminal window
+    2. Run: `cd wiki_watch && uvicorn app:app --reload --host 0.0.0.0 --port 8000`
+    3. Make sure you have a GROQ API key set in your environment (required for embeddings and completions)
+    
+    Once the backend is running, refresh this page to connect to it.
     """)
     st.markdown("---")
 

@@ -19,6 +19,10 @@ author = "agent"
 task = "workflow.run"
 args = "WikiWatch Streamlit Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "WikiWatch Backend Server"
+
 [[workflows.workflow]]
 name = "WikiWatch Streamlit Server"
 author = "agent"
@@ -27,6 +31,15 @@ author = "agent"
 task = "shell.exec"
 args = "cd wiki_watch && streamlit run frontend.py --server.port 5000"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "WikiWatch Backend Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd wiki_watch && python -m uvicorn app:app --host 0.0.0.0 --port 8000"
+waitForPort = 8000
 
 [[ports]]
 localPort = 5000
