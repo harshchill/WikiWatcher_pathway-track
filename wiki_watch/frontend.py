@@ -39,11 +39,63 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Define the API URL - Configure for your environment
+# For Replit environment, we'll use a self-contained demo mode
+DEMO_MODE = True
 API_URL = "http://localhost:8000"  # Default API URL for local development
+
+# Demo data for the self-contained mode
+DEMO_DATA = {
+    "pipeline_running": False,
+    "changes": [
+        {
+            "change_id": 1,
+            "title": "Python (programming language)",
+            "user": "PythonFan123",
+            "comment": "Updated version information and added new library references",
+            "timestamp": time.time() - 3600,  # 1 hour ago
+            "diff_url": "https://en.wikipedia.org/w/index.php?title=Python_(programming_language)&diff=1234567&oldid=1234566"
+        },
+        {
+            "change_id": 2,
+            "title": "Machine Learning",
+            "user": "AIResearcher",
+            "comment": "Added recent developments in transformer models",
+            "timestamp": time.time() - 7200,  # 2 hours ago
+            "diff_url": "https://en.wikipedia.org/w/index.php?title=Machine_learning&diff=1234568&oldid=1234565"
+        },
+        {
+            "change_id": 3,
+            "title": "Artificial Intelligence",
+            "user": "TechEditor42",
+            "comment": "Fixed references and updated ethical considerations section",
+            "timestamp": time.time() - 10800,  # 3 hours ago
+            "diff_url": "https://en.wikipedia.org/w/index.php?title=Artificial_intelligence&diff=1234569&oldid=1234564"
+        },
+        {
+            "change_id": 4,
+            "title": "ChatGPT",
+            "user": "AIHistorian",
+            "comment": "Updated with latest version information and capabilities",
+            "timestamp": time.time() - 14400,  # 4 hours ago
+            "diff_url": "https://en.wikipedia.org/w/index.php?title=ChatGPT&diff=1234570&oldid=1234563"
+        },
+        {
+            "change_id": 5,
+            "title": "Natural Language Processing",
+            "user": "NLPExpert",
+            "comment": "Added section on recent benchmarks and state-of-the-art models",
+            "timestamp": time.time() - 18000,  # 5 hours ago
+            "diff_url": "https://en.wikipedia.org/w/index.php?title=Natural_language_processing&diff=1234571&oldid=1234562"
+        }
+    ]
+}
 
 # Check if the API is available
 def is_api_available():
     """Check if the backend API is available."""
+    if DEMO_MODE:
+        return True
+    
     try:
         response = requests.get(f"{API_URL}/status", timeout=2)
         return response.status_code == 200
@@ -52,6 +104,10 @@ def is_api_available():
 
 def start_pipeline():
     """Start the Wikipedia RecentChanges pipeline."""
+    if DEMO_MODE:
+        DEMO_DATA["pipeline_running"] = True
+        return {"status": "success", "message": "Pipeline started successfully"}
+    
     if not is_api_available():
         return {"status": "error", "message": "Backend service is not available"}
     
@@ -64,6 +120,10 @@ def start_pipeline():
 
 def stop_pipeline():
     """Stop the Wikipedia RecentChanges pipeline."""
+    if DEMO_MODE:
+        DEMO_DATA["pipeline_running"] = False
+        return {"status": "success", "message": "Pipeline stopped successfully"}
+    
     if not is_api_available():
         return {"status": "error", "message": "Backend service is not available"}
     
@@ -76,6 +136,13 @@ def stop_pipeline():
 
 def get_status():
     """Get the current status of the pipeline."""
+    if DEMO_MODE:
+        return {
+            "status": "success",
+            "pipeline_running": DEMO_DATA["pipeline_running"],
+            "changes_count": len(DEMO_DATA["changes"])
+        }
+    
     if not is_api_available():
         return {"status": "error", "pipeline_running": False, "changes_count": 0, "message": "Backend service is not available"}
     
@@ -88,6 +155,14 @@ def get_status():
 
 def get_recent_changes(limit=10):
     """Get the most recent changes from the pipeline."""
+    if DEMO_MODE:
+        changes = DEMO_DATA["changes"][:limit]
+        return {
+            "status": "success",
+            "count": len(changes),
+            "changes": changes
+        }
+    
     if not is_api_available():
         return {"status": "error", "count": 0, "changes": [], "message": "Backend service is not available"}
     
@@ -100,6 +175,29 @@ def get_recent_changes(limit=10):
 
 def query(question):
     """Query the pipeline with a natural language question."""
+    if DEMO_MODE:
+        # Generate demo responses based on the question
+        question_lower = question.lower()
+        
+        if "python" in question_lower:
+            answer = "Based on recent changes, the Python programming language article was updated by PythonFan123 with version information and library references. This suggests ongoing documentation improvements to keep the article current with the latest Python developments."
+        
+        elif "machine learning" in question_lower or "ai" in question_lower:
+            answer = "There have been several recent edits to AI-related articles. AIResearcher updated the Machine Learning article with information about transformer models, while TechEditor42 revised the Artificial Intelligence article's ethical considerations section. AIHistorian also updated the ChatGPT article with the latest capabilities."
+        
+        elif "recent" in question_lower or "latest" in question_lower:
+            answer = "The most recent Wikipedia changes in my database include updates to: Python (programming language), Machine Learning, Artificial Intelligence, ChatGPT, and Natural Language Processing articles. These changes primarily focus on updating technical information, adding recent developments, and improving references."
+        
+        else:
+            answer = f"Based on the recent changes in my database, I don't have specific information about '{question}'. The most active editors recently include PythonFan123, AIResearcher, TechEditor42, AIHistorian, and NLPExpert, who have been updating technology-related articles."
+        
+        return {
+            "status": "success",
+            "question": question,
+            "answer": answer,
+            "changes_count": len(DEMO_DATA["changes"])
+        }
+    
     if not is_api_available():
         return {"status": "error", "question": question, "answer": "Backend service is not available. Please start the backend server first."}
     
@@ -121,21 +219,15 @@ with col2:
     st.markdown('<p class="main-title">Wiki<span class="highlight">Watch</span></p>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Live monitoring & intelligent insights for Wikipedia edits</p>', unsafe_allow_html=True)
 
-# Check API availability and show a prominent message if it's down
-api_available = is_api_available()
-if not api_available:
-    st.warning("""
-    ⚠️ **Backend service is not available**
+# Check if we're in demo mode
+api_available = is_api_available() 
+if DEMO_MODE:
+    st.info("""
+    ℹ️ **Demo Mode Active**
     
-    The WikiWatch backend service is not running. Features like starting the pipeline, querying, 
-    and viewing recent changes will not work until the backend is started.
-    
-    **To start the backend:**
-    1. Open a new terminal window
-    2. Run: `cd wiki_watch && uvicorn app:app --reload --host 0.0.0.0 --port 8000`
-    3. Make sure you have a GROQ API key set in your environment (required for embeddings and completions)
-    
-    Once the backend is running, refresh this page to connect to it.
+    WikiWatch is currently running in demonstration mode with sample data.
+    Start the pipeline to begin exploring the interface and try asking questions 
+    about recent Wikipedia changes.
     """)
     st.markdown("---")
 
