@@ -2,6 +2,28 @@
 
 WikiWatch is a real-time application that monitors Wikipedia's recent changes, processes them, and allows users to ask natural language questions about what's happening on Wikipedia right now.
 
+🔗 **Live Demo**: [https://wikiwatcher-frontend.onrender.com](https://wikiwatcher-frontend.onrender.com)
+
+## Project Structure
+```
+wiki_watch/
+├── backend/
+│   ├── app.py              # Main FastAPI application
+│   ├── optimized_backend.py # Optimized backend implementation
+│   ├── pipeline.py         # Wikipedia SSE stream processing
+│   ├── simple_backend.py   # Simple backend implementation
+│   └── Procfile           # Backend deployment configuration
+├── frontend/
+│   ├── frontend.py        # Streamlit frontend application
+│   ├── Procfile          # Frontend deployment configuration
+│   └── .streamlit/       # Streamlit configuration
+├── config/
+│   └── .env.template     # Environment variables template
+├── requirements.txt      # Python dependencies
+├── runtime.txt          # Python version specification
+└── README.md           # Project documentation
+```
+
 ## Features
 
 - Connect to Wikipedia's RecentChanges SSE stream to get live updates
@@ -25,11 +47,13 @@ cp .env.template .env
 
 3. Run the backend server
 ```bash
+cd backend
 python -m uvicorn optimized_backend:app --host 0.0.0.0 --port 8000
 ```
 
 4. Run the frontend (in a separate terminal)
 ```bash
+cd frontend
 streamlit run frontend.py --server.port 5000
 ```
 
@@ -65,13 +89,6 @@ streamlit run frontend.py --server.port 5000
    - Key: API_URL
    - Value: Your backend URL (e.g., https://wikiwatch-backend.onrender.com)
 
-### Important Notes for Free Tier
-
-1. Services will spin down after 15 minutes of inactivity
-2. Maximum of 750 hours per month of runtime
-3. Limited to 512 MB RAM and 0.1 CPU
-4. Automatic HTTPS/SSL provided
-5. Cold starts may occur after inactivity
 
 ## Usage
 
