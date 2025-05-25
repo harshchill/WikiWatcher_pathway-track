@@ -105,7 +105,8 @@ def query(question):
     
     try:
         # URL encode the question to handle special characters
-        encoded_question = requests.utils.quote(question)
+        from urllib.parse import quote
+        encoded_question = quote(question)
         response = requests.get(f"{API_URL}/query?q={encoded_question}", timeout=10)
         response.raise_for_status()
         return response.json()
@@ -209,26 +210,30 @@ with query_container:
     """, unsafe_allow_html=True)
     
     # User query input with improved styling
-    question = st.text_input("", 
-                          placeholder="Type your question here...",
-                          label_visibility="collapsed")
+    question = st.text_input("Your question", 
+                          placeholder="Type your question here...")
     
     # Query button with better styling
-    if st.button("🔍 Search Wikipedia Changes", type="primary") and question:
-        with st.spinner("Analyzing recent changes..."):
-            result = query(question)
-            
-            if result["status"] == "success":
-                st.markdown("""
-                <div style="padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #FFC107; 
-                            background-color: #f8f9fa; margin: 1rem 0;">
-                """, unsafe_allow_html=True)
-                st.markdown(f"**Your answer:**", unsafe_allow_html=True)
-                st.write(result["answer"])
-                st.caption(f"Based on {result.get('changes_count', 0)} recent Wikipedia changes")
-                st.markdown("</div>", unsafe_allow_html=True)
-            else:
-                st.error("Failed to get an answer. Make sure the pipeline is running.")
+    search_button = st.button("🔍 Search Wikipedia Changes", type="primary", disabled=not api_available)
+    
+    if search_button and question:
+        if not api_available:
+            st.error("Cannot process your question. Backend service is not available.")
+        else:
+            with st.spinner("Analyzing recent changes..."):
+                result = query(question)
+                
+                if result["status"] == "success":
+                    st.markdown("""
+                    <div style="padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #FFC107; 
+                                background-color: #f8f9fa; margin: 1rem 0;">
+                    """, unsafe_allow_html=True)
+                    st.markdown(f"**Your answer:**", unsafe_allow_html=True)
+                    st.write(result["answer"])
+                    st.caption(f"Based on {result.get('changes_count', 0)} recent Wikipedia changes")
+                    st.markdown("</div>", unsafe_allow_html=True)
+                else:
+                    st.error(result.get("answer", "Failed to get an answer. Make sure the pipeline is running."))
 
 # Recent changes section with improved styling
 st.markdown('<h3>Recent Wikipedia Activity</h3>', unsafe_allow_html=True)
@@ -236,39 +241,66 @@ st.markdown('<h3>Recent Wikipedia Activity</h3>', unsafe_allow_html=True)
 # Add refresh button with better styling
 col1, col2 = st.columns([1, 6])
 with col1:
-    if st.button("🔄 Refresh", key="refresh_changes"):
+    refresh_button = st.button("🔄 Refresh", key="refresh_changes", disabled=not api_available)
+    if refresh_button:
         st.rerun()
 
 # Display the recent changes with improved styling
-changes_data = get_recent_changes(limit=20)
-if changes_data["status"] == "success" and changes_data["count"] > 0:
-    st.markdown(f"<p style='color:#6c757d;font-size:0.9rem;'>Showing latest {changes_data['count']} edits</p>", unsafe_allow_html=True)
+if not api_available:
+    st.warning("Backend service is not available. Cannot display recent changes.")
     
-    # Create a container for all changes
-    changes_container = st.container()
-    with changes_container:
-        for i, change in enumerate(changes_data["changes"]):
-            # Create a cleaner expander with highlight
-            expander_title = f"{change['title']} - by {change['user']}"
-            with st.expander(expander_title):
-                cols = st.columns([1, 1])
-                with cols[0]:
-                    st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Page</span>: {change['title']}", unsafe_allow_html=True)
-                    st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Editor</span>: {change['user']}", unsafe_allow_html=True)
-                with cols[1]:
-                    st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Time</span>: {datetime.fromtimestamp(change['timestamp']).strftime('%Y-%m-%d %H:%M:%S')}", unsafe_allow_html=True)
-                    st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Diff URL</span>: [{change['diff_url'].split('/')[-1]}]({change['diff_url']})", unsafe_allow_html=True)
-                
-                # Comment section with special styling if available
-                if change['comment']:
-                    st.markdown("<div style='margin-top:0.5rem;padding:0.5rem;background-color:#f8f9fa;border-radius:0.3rem;'>", unsafe_allow_html=True)
-                    st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Comment</span>: {change['comment']}", unsafe_allow_html=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
+    # Show placeholder data visualization to demonstrate UI
+    st.markdown("""
+    <div style="padding: 1rem; border-radius: 0.5rem; background-color: #f8f9fa; margin-top: 1rem;">
+        <p style="text-align: center; color: #6c757d;">
+            <i>Preview of how recent changes will appear when backend is connected</i>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Display some example data just for UI demonstration
+    with st.expander("Example: Python (programming language) - by WikiUser123"):
+        cols = st.columns([1, 1])
+        with cols[0]:
+            st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Page</span>: Python (programming language)", unsafe_allow_html=True)
+            st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Editor</span>: WikiUser123", unsafe_allow_html=True)
+        with cols[1]:
+            st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Time</span>: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", unsafe_allow_html=True)
+            st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Diff URL</span>: [View diff](https://en.wikipedia.org)", unsafe_allow_html=True)
+        
+        st.markdown("<div style='margin-top:0.5rem;padding:0.5rem;background-color:#f8f9fa;border-radius:0.3rem;'>", unsafe_allow_html=True)
+        st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Comment</span>: Updated version information and added new library references", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 else:
-    if status["pipeline_running"]:
-        st.info("⏳ Waiting for changes to be collected... This may take a few moments.")
+    changes_data = get_recent_changes(limit=20)
+    if changes_data["status"] == "success" and changes_data["count"] > 0:
+        st.markdown(f"<p style='color:#6c757d;font-size:0.9rem;'>Showing latest {changes_data['count']} edits</p>", unsafe_allow_html=True)
+        
+        # Create a container for all changes
+        changes_container = st.container()
+        with changes_container:
+            for i, change in enumerate(changes_data["changes"]):
+                # Create a cleaner expander with highlight
+                expander_title = f"{change['title']} - by {change['user']}"
+                with st.expander(expander_title):
+                    cols = st.columns([1, 1])
+                    with cols[0]:
+                        st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Page</span>: {change['title']}", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Editor</span>: {change['user']}", unsafe_allow_html=True)
+                    with cols[1]:
+                        st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Time</span>: {datetime.fromtimestamp(change['timestamp']).strftime('%Y-%m-%d %H:%M:%S')}", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Diff URL</span>: [{change['diff_url'].split('/')[-1]}]({change['diff_url']})", unsafe_allow_html=True)
+                    
+                    # Comment section with special styling if available
+                    if change['comment']:
+                        st.markdown("<div style='margin-top:0.5rem;padding:0.5rem;background-color:#f8f9fa;border-radius:0.3rem;'>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color:#FFC107;font-weight:500;'>Comment</span>: {change['comment']}", unsafe_allow_html=True)
+                        st.markdown("</div>", unsafe_allow_html=True)
     else:
-        st.warning("⚠️ No changes available. Please start the pipeline first.")
+        if status["pipeline_running"]:
+            st.info("⏳ Waiting for changes to be collected... This may take a few moments.")
+        else:
+            st.warning("⚠️ No changes available. Please start the pipeline first.")
 
 # Footer with better styling
 st.markdown("---")
