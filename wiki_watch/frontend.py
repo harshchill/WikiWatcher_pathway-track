@@ -39,8 +39,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Define the API URL - Configure for your environment
-# For Replit environment, we'll use a self-contained demo mode
-DEMO_MODE = True
+# Set to False to use the real backend
+DEMO_MODE = False
 API_URL = "http://localhost:8000"  # Default API URL for local development
 
 # Demo data for the self-contained mode
