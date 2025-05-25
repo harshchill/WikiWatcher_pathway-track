@@ -1,3 +1,4 @@
+import os
 import time
 import requests
 import streamlit as st
@@ -41,7 +42,7 @@ st.markdown("""
 # Define the API URL - Configure for your environment
 # Set to False to use the real backend
 DEMO_MODE = False
-API_URL = "http://localhost:8000"  # Default API URL for local development
+API_URL = os.getenv("API_URL", "http://localhost:8000")  # Default API URL for local development
 
 # Demo data for the self-contained mode
 DEMO_DATA = {
