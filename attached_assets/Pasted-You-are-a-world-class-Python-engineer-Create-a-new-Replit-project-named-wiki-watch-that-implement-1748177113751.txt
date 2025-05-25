@@ -1,0 +1,49 @@
+You are a world-class Python engineer. Create a new Replit project named “wiki_watch” that implements a real-time Wikipedia change Q&A bot. Specifically:
+
+1. In `pipeline.py`:
+   - Connect to Wikipedia’s RecentChanges SSE stream at https://stream.wikimedia.org/v2/stream/recentchange.
+   - For each incoming JSON event, extract: `id` (change ID), `title`, `user`, `comment`, `timestamp`, and `diff` URL.
+   - Append each record to a Pathway table named `recent_changes` with schema:
+     ```python
+     {
+       "change_id": int,
+       "title": str,
+       "user": str,
+       "comment": str,
+       "timestamp": float,
+       "diff_url": str
+     }
+     ```
+   - After inserting a row, fetch the diff text from `diff_url`. If it’s large, split into ~500-token chunks.
+   - For each chunk, call the Groq embeddings endpoint (using env var `GROQ_API_KEY`), and store the resulting vector back in Pathway alongside the chunk’s metadata.
+
+2. In `app.py`:
+   - Create a FastAPI app with two routes:
+     - `POST /start_pipeline`: spins up the SSE listener in the background.
+     - `GET /query?q=`: takes a user question, runs a vector search over the live `recent_changes` table (top-k), and sends the retrieved diffs plus metadata into the Groq chat completion endpoint to generate a concise summary or answer.
+
+3. Project structure:
+wiki_watch/
+├── pipeline.py # SSE ingestion, diff fetching, embeddings
+├── app.py # FastAPI server for start & query
+├── requirements.txt # pathway, fastapi, uvicorn, aiohttp, feedparser, groq_sdk
+├── .env.template # GROQ_API_KEY=<your_key_here>
+└── README.md # Setup instructions: install deps, fill .env, run pipeline & server, demo queries
+
+arduino
+Copy
+Edit
+
+4. In `README.md`, provide:
+- `pip install -r requirements.txt`
+- `cp .env.template .env && fill in GROQ_API_KEY`
+- `uvicorn app:app --reload`
+- Example:
+  ```
+  # start ingestion
+  curl -X POST http://localhost:8000/start_pipeline
+  # query
+  curl "http://localhost:8000/query?q=latest+edit+to+Python+page"
+  ```
+
+Include clear comments in code explaining each step. Ensure the demo shows live ingestion → vector indexing → real-time Q&A updates. Make it easy for a non-expert to run and see the “magical” live updates!```
